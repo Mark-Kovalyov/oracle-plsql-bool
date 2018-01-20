@@ -1,0 +1,242 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// '0..9' - 48..57
+// 'a..f' - 97..102
+// 'A..F' - 65..70
+
+CREATE OR REPLACE PACKAGE BINHEX_BOOL AS
+
+  FUNCTION DEHEX(A IN VARCHAR2) RETURN PLS_INTEGER DETERMINISTIC;
+
+  FUNCTION MAX$(A IN PLS_INTEGER,B IN PLS_INTEGER) RETURN PLS_INTEGER DETERMINISTIC;
+
+  FUNCTION MIN$(A IN PLS_INTEGER,B IN PLS_INTEGER) RETURN PLS_INTEGER DETERMINISTIC;
+
+  FUNCTION XOR$(A IN VARCHAR2,B IN VARCHAR2) RETURN VARCHAR2 DETERMINISTIC;
+
+  FUNCTION OR$(A IN VARCHAR2,B IN VARCHAR2) RETURN VARCHAR2 DETERMINISTIC;
+
+  FUNCTION AND$(A IN VARCHAR2,B IN VARCHAR2) RETURN VARCHAR2 DETERMINISTIC;
+
+  FUNCTION INV$(A IN VARCHAR2) RETURN VARCHAR2 DETERMINISTIC;
+
+END;
+/
+
+CREATE OR REPLACE PACKAGE BODY BINHEX_BOOL AS
+
+  FUNCTION DEHEX(A IN VARCHAR2) RETURN PLS_INTEGER IS
+     AI PLS_INTEGER;
+     NON_BINHEX_SYMBOL EXCEPTION;
+  BEGIN
+     AI:=ASCII(A);
+     IF AI>=48 AND AI<=57 THEN
+       AI:=AI-48;
+     ELSIF AI>=97 AND AI<=102 THEN
+       AI:=AI-97+10;
+     ELSIF AI>=65 AND AI<=70 THEN
+       AI:=AI-65+10;
+     ELSE
+       RAISE NON_BINHEX_SYMBOL;
+     END IF;
+     RETURN AI;
+  END;
+
+  FUNCTION MAX$(A IN PLS_INTEGER,B IN PLS_INTEGER) RETURN PLS_INTEGER IS
+  BEGIN
+    IF (A>B) THEN 
+      RETURN A;
+    ELSE 
+      RETURN B;
+    END IF;
+  END;
+
+  FUNCTION MIN$(A IN PLS_INTEGER,B IN PLS_INTEGER) RETURN PLS_INTEGER IS
+  BEGIN
+    IF (A<B) THEN 
+      RETURN A;
+    ELSE 
+      RETURN B;
+    END IF;
+  END;
+
+  FUNCTION XOR$(A IN VARCHAR2,B IN VARCHAR2) RETURN VARCHAR2
+  IS 
+    I PLS_INTEGER;
+    ML  PLS_INTEGER:=0;
+    MXL PLS_INTEGER:=0;
+    AI  PLS_INTEGER;
+    BI  PLS_INTEGER;
+    RES VARCHAR2(4000);
+    TTB CONSTANT VARCHAR2(256):=
+   '0123456789ABCDEF'||
+   '1032547698BADCFE'||
+   '23016745AB89EFCD'||
+   '32107654BA98FEDC'||
+   '45670123CDEF89AB'||
+   '54761032DCFE98BA'||
+   '67452301EFCDAB89'||
+   '76543210FEDCBA98'||
+   '89ABCDEF01234567'||
+   '98BADCFE10325476'||
+   'AB89EFCD23016745'||
+   'BA98FEDC32107654'||
+   'CDEF89AB45670123'||
+   'DCFE98BA54761032'||
+   'EFCDAB8967452301'||
+   'FEDCBA9876543210';
+    NON_BINHEX_SYMBOL EXCEPTION; 
+    -- TODO: Add exception handling with desc
+    PRAGMA EXCEPTION_INIT(NON_BINHEX_SYMBOL,-20000);
+  BEGIN
+    IF A IS NULL THEN
+      RETURN B;
+    END IF;
+    IF B IS NULL THEN
+      RETURN A;
+    END IF;
+    ML := MIN$(LENGTH(A),LENGTH(B));
+    IF (LENGTH(A)=LENGTH(B)) THEN
+      FOR I IN 1..ML LOOP
+        AI :=  DEHEX(SUBSTR(A, I, 1));
+        BI :=  DEHEX(SUBSTR(B, I, 1));     
+        RES := RES || SUBSTR(TTB, AI * 16 + BI + 1, 1); 
+      END LOOP;
+      RETURN RES;
+    END IF; 
+    -- TODO: Complete logic with different length of A,B
+    RETURN 'Unknown';
+  END;
+
+  FUNCTION OR$(A IN VARCHAR2,B IN VARCHAR2) RETURN VARCHAR2
+  IS 
+    I PLS_INTEGER;
+    ML  PLS_INTEGER:=0;
+    MXL PLS_INTEGER:=0;
+    AI  PLS_INTEGER;
+    BI  PLS_INTEGER;
+    RES VARCHAR2(4000);
+    TTB CONSTANT VARCHAR2(256):=
+   '0123456789ABCDEF'||
+   '1133557799BBDDFF'||
+   '23236767ABABEFEF'||
+   '33337777BBBBFFFF'||
+   '45674567CDEFCDEF'||
+   '55775577DDFFDDFF'||
+   '67676767EFEFEFEF'||
+   '77777777FFFFFFFF'||
+   '89ABCDEF89ABCDEF'||
+   '99BBDDFF99BBDDFF'||
+   'ABABEFEFABABEFEF'||
+   'BBBBFFFFBBBBFFFF'||
+   'CDEFCDEFCDEFCDEF'||
+   'DDFFDDFFDDFFDDFF'||
+   'EFEFEFEFEFEFEFEF'||
+   'FFFFFFFFFFFFFFFF';
+    NON_BINHEX_SYMBOL EXCEPTION; 
+    -- TODO: Add exception handling with desc
+    PRAGMA EXCEPTION_INIT(NON_BINHEX_SYMBOL,-20000);
+  BEGIN
+    IF A IS NULL THEN
+      RETURN B;
+    END IF;
+    IF B IS NULL THEN
+      RETURN A;
+    END IF;
+    ML := MIN$(LENGTH(A),LENGTH(B));
+    IF (LENGTH(A)=LENGTH(B)) THEN
+      FOR I IN 1..ML LOOP
+        AI :=  DEHEX(SUBSTR(A, I, 1));
+        BI :=  DEHEX(SUBSTR(B, I, 1));     
+        RES := RES || SUBSTR(TTB, AI * 16 + BI + 1, 1); 
+      END LOOP;
+      RETURN RES;
+    END IF; 
+    -- TODO: Complete logic with different length of A,B
+    RETURN 'Unknown';
+  END;
+
+  FUNCTION AND$(A IN VARCHAR2,B IN VARCHAR2) RETURN VARCHAR2
+  IS 
+    I PLS_INTEGER;
+    ML  PLS_INTEGER:=0;
+    MXL PLS_INTEGER:=0;
+    AI  PLS_INTEGER;
+    BI  PLS_INTEGER;
+    RES VARCHAR2(4000);
+    TTB CONSTANT VARCHAR2(256):=
+   '0000000000000000'||
+   '0101010101010101'||
+   '0022002200220022'||
+   '0123012301230123'||
+   '0000444400004444'||
+   '0101454501014545'||
+   '0022446600224466'||
+   '0123456701234567'||
+   '0000000088888888'||
+   '0101010189898989'||
+   '0022002288AA88AA'||
+   '0123012389AB89AB'||
+   '000044448888CCCC'||
+   '010145458989CDCD'||
+   '0022446688AACCEE'||
+   '0123456789ABCDEF';
+    NON_BINHEX_SYMBOL EXCEPTION; 
+    -- TODO: Add exception handling with desc
+    PRAGMA EXCEPTION_INIT(NON_BINHEX_SYMBOL,-20000);
+  BEGIN
+    IF A IS NULL THEN
+      RETURN B;
+    END IF;
+    IF B IS NULL THEN
+      RETURN A;
+    END IF;
+    ML := MIN$(LENGTH(A),LENGTH(B));
+    IF (LENGTH(A)=LENGTH(B)) THEN
+      FOR I IN 1..ML LOOP
+        AI :=  DEHEX(SUBSTR(A, I, 1));
+        BI :=  DEHEX(SUBSTR(B, I, 1));     
+        RES := RES || SUBSTR(TTB, AI * 16 + BI + 1, 1); 
+      END LOOP;
+      RETURN RES;
+    END IF; 
+    -- TODO: Complete logic with different length of A,B
+    RETURN 'Unknown';
+  END;
+
+  FUNCTION INV$(A IN VARCHAR2) RETURN VARCHAR2 IS
+    L PLS_INTEGER;
+    CODE PLS_INTEGER;
+    RES VARCHAR2(4000);
+    HEX CONSTANT VARCHAR2(16):='0123456789ABCDEF';
+  BEGIN
+    IF A IS NULL THEN
+      RETURN NULL;
+    END IF;
+    L := LENGTH(A);
+    FOR I IN 1..L LOOP
+      RES := RES || SUBSTR(HEX, 16 - DEHEX(SUBSTR(A, I, 1)), 1);
+    END LOOP;
+    RETURN RES;
+  END;
+
+END;
+/
+
+
+
