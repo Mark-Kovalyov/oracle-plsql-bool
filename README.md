@@ -1,7 +1,10 @@
-# oracle-plsql-bool
+# Oracle-plsql-bool
 Oracle PL/SQL boolean operations support over BinHex encoded strings
 
-See example:
+# Motivation
+Today there are no in-box API for bitwize and boolean operations.
+
+# Examples
 
     SQL> select binhex_bool.xor$('01234567890abcdef','ffff00000000fffff') from dual;
 
@@ -29,3 +32,8 @@ See example:
     BINHEX_BOOL.INV$('01234567890ABCDEF')
     --------------------------------------------------------------------------------
     FEDCBA9876F543210
+
+# What next
+ - Implement set of Bloom-filter functions as part of this API
+ - Support text search with oracle-plsql-bool
+ - Support faced-search if it's possible
